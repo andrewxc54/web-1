@@ -1,14 +1,90 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>My GitHub Website</title>
-  <style>
-    body { font-family: sans-serif; background-color: #fafafa; text-align: center; margin-top: 50px; }
-    h1 { color: #333; }
-  </style>
-</head>
-<body>
-  <h1>Hello from GitHub Pages!</h1>
-  <p>This is my first website hosted on GitHub.</p>
-</body>
-</html>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = 800;
+canvas.height = 600;
+
+let score = 0;
+let bullets = [];
+let targets = [];
+
+class Target {
+  constructor() {
+    this.x = Math.random() * 760;
+    this.y = Math.random() * 560;
+    this.size = 40;
+    this.speed = 2;
+  }
+
+  draw() {
+    ctx.fillStyle = 'red';
+    ctx.fillRect(this.x, this.y, this.size, this.size);
+  }
+
+  update() {
+    this.x += Math.random() * this.speed - this.speed / 2;
+    this.y += Math.random() * this.speed - this.speed / 2;
+    this.draw();
+  }
+}
+
+class Bullet {
+  constructor(x, y) {
+    this.x = 400;
+    this.y = 580;
+    this.dx = (x - this.x) * 0.05;
+    this.dy = (y - this.y) * 0.05;
+    this.size = 5;
+  }
+
+  update() {
+    this.x += this.dx;
+    this.y += this.dy;
+    ctx.fillStyle = 'white';
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+canvas.addEventListener('click', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+  bullets.push(new Bullet(x, y));
+});
+
+function spawnTarget() {
+  if (targets.length < 5) {
+    targets.push(new Target());
+  }
+}
+
+function drawScore() {
+  ctx.fillStyle = '#fff';
+  ctx.font = '20px Arial';
+  ctx.fillText('Score: ' + score, 10, 30);
+}
+
+function gameLoop() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  bullets.forEach((b, i) => {
+    b.update();
+    targets.forEach((t, j) => {
+      if (
+        b.x > t.x && b.x < t.x + t.size &&
+        b.y > t.y && b.y < t.y + t.size
+      ) {
+        bullets.splice(i, 1);
+        targets.splice(j, 1);
+        score++;
+      }
+    });
+  });
+
+  targets.forEach(t => t.update());
+  drawScore();
+  spawnTarget();
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
